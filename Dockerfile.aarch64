@@ -1,0 +1,31 @@
+FROM ubuntu:bionic
+MAINTAINER David Volm <david@volminator.com>
+
+# upgrade ubuntu packages
+ENV DEBIAN_FRONTEND="noninteractive"
+# fix "September 30th problem"
+# https://github.com/nodesource/distributions/issues/1266#issuecomment-931597235
+RUN apt update; apt install -y ca-certificates && \
+    apt update;
+RUN apt install apt-utils -y
+RUN apt upgrade -y
+
+
+WORKDIR /usr/src
+RUN apt install curl -y
+RUN curl -L https://www.supermicro.com/wdl/utility/IPMIView/Linux/IPMIView_2.19.0_build.210401_bundleJRE_Linux_x64.tar.gz | tar xzv
+RUN apt install openjdk-8-jre -y
+
+
+RUN apt-get update && apt-get -y install xvfb x11vnc wget \
+    supervisor fluxbox net-tools python-numpy \
+    chromium-browser firefox vim
+ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+WORKDIR /root/
+ADD novnc /root/novnc/
+
+ENV DISPLAY :0
+ENV RES 1024x768x24
+EXPOSE 8080
+CMD ["/usr/bin/supervisord"]
